@@ -1,7 +1,6 @@
 <?php
 namespace Bump\Library\Common\Api;
 
-use Bump\Library\Common\Utils;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 
@@ -15,9 +14,15 @@ class MorphedResponse extends Response
         parent::__construct($response);
     }
 
-    protected function morph($content)
+    public function send($return = false)
     {
-        return $this->morphedData;
+        $response = new HttpResponse($this->__toString(), 200, array('Content-Type' => $this->getContentType()));
+        return $return ? $response : $response->send();
+    }
+
+    public function __toString()
+    {
+        return json_encode($this->getData());
     }
 
     public function getContentType()
@@ -25,19 +30,13 @@ class MorphedResponse extends Response
         return $this->getOriginalResponse()->headers->get('Content-type');
     }
 
-    public function send($return=false)
-    {
-        $response = new HttpResponse($this->__toString(), 200, array('Content-Type'=>$this->getContentType()));
-        return $return?$response:$response->send();
-    }
-
-    public function getHash($prefix='')
+    public function getHash($prefix = '')
     {
         return md5($prefix . serialize($this->getData()));
     }
 
-    public function __toString()
+    protected function morph($content)
     {
-        return json_encode($this->getData());
+        return $this->morphedData;
     }
 }

@@ -1,19 +1,19 @@
 <?php
 namespace Bump\Library\Common\Curl;
 
-use Symfony\Component\HttpFoundation\Response;
-use Zeroem\CurlBundle\Curl\MultiManager as Base;
-use Zeroem\CurlBundle\Curl\Collector\HeaderCollector;
 use Bump\Library\Common\Curl\Request as CurlRequest;
+use Symfony\Component\HttpFoundation\Response;
+use Zeroem\CurlBundle\Curl\Collector\HeaderCollector;
+use Zeroem\CurlBundle\Curl\MultiManager as Base;
 use Zeroem\CurlBundle\Curl\Request as BaseRequest;
 
 class MultiManager extends Base
 {
     protected static $errors = array(
-        CURLM_BAD_HANDLE      => 'Bad Handle',
+        CURLM_BAD_HANDLE => 'Bad Handle',
         CURLM_BAD_EASY_HANDLE => 'Bad Easy Handle',
-        CURLM_OUT_OF_MEMORY   => 'Out of Memory',
-        CURLM_INTERNAL_ERROR  => 'Internal Error'
+        CURLM_OUT_OF_MEMORY => 'Out of Memory',
+        CURLM_INTERNAL_ERROR => 'Internal Error'
     );
 
     protected $headers = array();
@@ -38,7 +38,8 @@ class MultiManager extends Base
         return $response;
     }
 
-    public function addRequest(BaseRequest $request) {
+    public function addRequest(BaseRequest $request)
+    {
         parent::addRequest($request);
         $oid = spl_object_hash($request);
 
@@ -52,7 +53,7 @@ class MultiManager extends Base
 
     public function isEmpty()
     {
-        return count($this->headers)===0;
+        return count($this->headers) === 0;
     }
 
     public function findHeaders(BaseRequest $request)

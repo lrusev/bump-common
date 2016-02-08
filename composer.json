@@ -1,25 +1,28 @@
 {
-    "name": "bump/library-common",
-    "version": "0.0.1",
-    "type": "library",
-    "description": "This library contain some helpful classes",
-    "keywords": ["bumpnetworks"],
-    "license": "MIT",
-    "require": {
-        "php": ">=5.3.0",
-        "symfony/symfony": "~2.2",
-        "doctrine/cache": "1.*",
-        "zeroem/curl-bundle": "dev-master",
-        "doctrine/inflector": "1.*"
-
-    },
-    "authors": [
-        {
-            "name": "Leonid Rusev",
-            "email": "lgrusev@od.bumpnetworks.com"
-        }
-    ],
-    "autoload": {
-        "psr-0": { "Bump": "" }
+  "name": "bump/library-common",
+  "version": "0.0.1",
+  "type": "library",
+  "description": "This library contain some helpful classes",
+  "keywords": [
+    "bumpnetworks"
+  ],
+  "license": "MIT",
+  "require": {
+    "php": ">=5.3.0",
+    "symfony/symfony": "~2.2",
+    "doctrine/cache": "1.*",
+    "zeroem/curl-bundle": "dev-master",
+    "doctrine/inflector": "1.*"
+  },
+  "authors": [
+    {
+      "name": "Leonid Rusev",
+      "email": "lgrusev@od.bumpnetworks.com"
     }
+  ],
+  "autoload": {
+    "psr-0": {
+      "Bump": ""
+    }
+  }
 }

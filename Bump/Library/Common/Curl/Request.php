@@ -5,20 +5,19 @@ use Zeroem\CurlBundle\Curl\Request as Base;
 
 class Request extends Base
 {
+    static private $_methodOptionMap = array(
+        "GET" => CURLOPT_HTTPGET,
+        "POST" => CURLOPT_POST,
+        "HEAD" => CURLOPT_NOBODY,
+        "PUT" => CURLOPT_PUT
+    );
     protected $id;
     protected $url;
     protected $method = 'GET';
     protected $params = array();
     protected $headers = array();
 
-    static private $_methodOptionMap = array(
-        "GET"=>CURLOPT_HTTPGET,
-        "POST"=>CURLOPT_POST,
-        "HEAD"=>CURLOPT_NOBODY,
-        "PUT"=>CURLOPT_PUT
-    );
-
-    public function __construct($url, $method="GET", array $params=array())
+    public function __construct($url, $method = "GET", array $params = array())
     {
         $method = strtoupper($method);
         $this->method = $method;
@@ -29,7 +28,7 @@ class Request extends Base
         }
 
         $this->setUrl($url)
-             ->setParams($params);
+            ->setParams($params);
 
         parent::__construct($url);
 
@@ -41,16 +40,16 @@ class Request extends Base
         $this->setOption(CURLOPT_RETURNTRANSFER, true);
     }
 
-    public function setId($id)
-    {
-        $this->id =$id;
-
-        return $this;
-    }
-
     public function getId()
     {
         return $this->id;
+    }
+
+    public function setId($id)
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     public function setHeader($key, $value)
@@ -59,6 +58,11 @@ class Request extends Base
         $this->setOption(CURLOPT_HTTPHEADER, array_values($this->headers));
 
         return $this;
+    }
+
+    public function getUrl()
+    {
+        return $this->url;
     }
 
     protected function setUrl($url)
@@ -75,30 +79,9 @@ class Request extends Base
         return $this;
     }
 
-    public function getUrl()
-    {
-        return $this->url;
-    }
-
     public function getMethod()
     {
         return $this->method;
-    }
-
-    protected function setParams(array $params)
-    {
-        $this->params = $params;
-
-        return $this;
-    }
-
-    public function getParams()
-    {
-        return $this->params;
-    }
-
-    public function __toString() {
-        return md5($this->url . $this->method . serialize($this->params));
     }
 
     /**
@@ -108,11 +91,29 @@ class Request extends Base
      * @param resource $handle the curl handle
      * @param Request $request the Request object we're populating
      */
-    public function setMethod($method) {
+    public function setMethod($method)
+    {
         if (isset(static::$_methodOptionMap[$method])) {
-            return $this->setOption(static::$_methodOptionMap[$method],true);
+            return $this->setOption(static::$_methodOptionMap[$method], true);
         } else {
-            return $this->setOption(CURLOPT_CUSTOMREQUEST,$method);
+            return $this->setOption(CURLOPT_CUSTOMREQUEST, $method);
         }
+    }
+
+    public function getParams()
+    {
+        return $this->params;
+    }
+
+    protected function setParams(array $params)
+    {
+        $this->params = $params;
+
+        return $this;
+    }
+
+    public function __toString()
+    {
+        return md5($this->url . $this->method . serialize($this->params));
     }
 }

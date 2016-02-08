@@ -2,8 +2,8 @@
 
 namespace Bump\Library\Common\Api;
 
-use Symfony\Component\HttpFoundation\Response as HttpResponse;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 abstract class Response extends ArrayCollection implements \Serializable, ApiResponse
 {
@@ -34,7 +34,7 @@ abstract class Response extends ArrayCollection implements \Serializable, ApiRes
 
     public function isSuccessful()
     {
-        return is_null($this->successful)?$this->originalResponse->isSuccessful():$this->successful;
+        return is_null($this->successful) ? $this->originalResponse->isSuccessful() : $this->successful;
     }
 
     public function getData()
@@ -47,7 +47,7 @@ abstract class Response extends ArrayCollection implements \Serializable, ApiRes
         return $this->originalResponse;
     }
 
-    public function setDebug($flag=true)
+    public function setDebug($flag = true)
     {
         $this->debug = (bool)$debug;
 
@@ -72,49 +72,53 @@ abstract class Response extends ArrayCollection implements \Serializable, ApiRes
         return null;
     }
 
-    public function has($key, $separator=null)
+    public function has($key, $separator = null)
     {
         if (!is_null($separator)) {
             $keys = explode($separator, $key);
             $ref = $this;
             $has = false;
-            foreach($keys as $k) {
+            foreach ($keys as $k) {
                 if (is_array($ref)) {
                     if (!isset($ref[$k])) {
                         $ref = null;
                         break;
                     }
-                } else if (is_null(($ref = $ref->get($k)))) {
-                    break;
+                } else {
+                    if (is_null(($ref = $ref->get($k)))) {
+                        break;
+                    }
                 }
             }
 
             return !is_null($ref);
         }
 
-        return null!==$this->get($key);
+        return null !== $this->get($key);
     }
 
-    public function get($key, $separator=null)
+    public function get($key, $separator = null)
     {
         if (!is_null($separator)) {
             $keys = explode($separator, $key);
-            $key = $keys[count($keys)-1];
-            $keys = array_slice($keys, 0, count($keys)-1);
+            $key = $keys[count($keys) - 1];
+            $keys = array_slice($keys, 0, count($keys) - 1);
             $ref = $this;
             $has = false;
-            foreach($keys as $k) {
+            foreach ($keys as $k) {
                 if (is_array($ref)) {
                     if (!isset($ref[$k])) {
-                        $ref=null;
+                        $ref = null;
                         break;
                     }
-                } else if (is_null(($ref = $ref->get($k)))) {
-                    break;
+                } else {
+                    if (is_null(($ref = $ref->get($k)))) {
+                        break;
+                    }
                 }
             }
 
-            return ($ref && isset($ref[$key]))?$ref[$key]:null;
+            return ($ref && isset($ref[$key])) ? $ref[$key] : null;
         }
 
         return parent::get($key);
@@ -134,7 +138,7 @@ abstract class Response extends ArrayCollection implements \Serializable, ApiRes
         $data = $this->getData();
         $this->clear();
         $normalized = array();
-        foreach($data as $key=>$value) {
+        foreach ($data as $key => $value) {
             $nk = $this->normalizeKey($key);
             if (isset($normalized[$key])) {
                 throw new \RuntimeException("Normalization conflict: {$key}->{$nk} already exists");
@@ -162,25 +166,27 @@ abstract class Response extends ArrayCollection implements \Serializable, ApiRes
         return $this->get($key);
     }
 
-    public function serialize() {
+    public function serialize()
+    {
         $data = array(
-            'data'=>$this->getData(),
-            'content'=>$this->originalResponse->getContent(),
-            'headers'=>$this->originalResponse->headers->all(),
-            'status'=>$this->originalResponse->getStatusCode(),
-            'normalized'=>$this->isNormalized()
+            'data' => $this->getData(),
+            'content' => $this->originalResponse->getContent(),
+            'headers' => $this->originalResponse->headers->all(),
+            'status' => $this->originalResponse->getStatusCode(),
+            'normalized' => $this->isNormalized()
         );
 
         return serialize($data);
     }
 
-    public function unserialize($data) {
+    public function unserialize($data)
+    {
         $data = unserialize($data);
         $this->clear();
         $this->originalResponse = new HttpResponse($data['content'], $data['status'], $data['headers']);
         $this->normalized = $data['normalized'];
 
-        foreach($data['data'] as $key=>$val) {
+        foreach ($data['data'] as $key => $val) {
             $this->set($key, $val);
         }
     }

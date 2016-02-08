@@ -1,7 +1,8 @@
 <?php
 namespace Bump\Library\Common;
 
-class CacheAggregator {
+class CacheAggregator
+{
 
     protected $cache;
     protected $cachePrefix;
@@ -9,7 +10,7 @@ class CacheAggregator {
     protected $defaultLifetime = 60;
     protected $lastCacheKey;
 
-    public function __construct(\Doctrine\Common\Cache\Cache $cache, $cachePrefix='', $defaultLifetime=null)
+    public function __construct(\Doctrine\Common\Cache\Cache $cache, $cachePrefix = '', $defaultLifetime = null)
     {
         $this->cache = $cache;
         $this->setCachePrefix($cachePrefix);
@@ -30,12 +31,7 @@ class CacheAggregator {
         return $this;
     }
 
-    public function isDisabled()
-    {
-        return !$this->enabled;
-    }
-
-    public function remember($key, \Closure $callback, $lifetime=null)
+    public function remember($key, \Closure $callback, $lifetime = null)
     {
         if ($this->isDisabled()) {
             return $callback();
@@ -52,83 +48,12 @@ class CacheAggregator {
         return $value;
     }
 
-    public function contains($key)
+    public function isDisabled()
     {
-        if ($this->isDisabled()) {
-            return false;
-        }
-        return $this->cache->contains($this->prefixize($key));
+        return !$this->enabled;
     }
 
-    public function fetch($key=null)
-    {
-        if ($this->isDisabled()) {
-            return null;
-        }
-
-        if (is_null($key)) {
-            if (is_null($this->lastCacheKey)) {
-                throw new \InvalidArgumentException("Expected at least key, and data arguments");
-            }
-
-            $key = $this->lastCacheKey;
-        } else {
-            $key = $this->prefixize($key);
-        }
-
-        return $this->cache->fetch($key);
-    }
-
-    public function delete($key=null)
-    {
-        if (is_null($key)) {
-            if (is_null($this->lastCacheKey)) {
-                throw new \InvalidArgumentException("Expected at least key, and data arguments");
-            }
-
-            $key = $this->lastCacheKey;
-        } else {
-            $key = $this->prefixize($key);
-        }
-
-        return $this->cache->delete($this->prefixize($key));
-    }
-
-    public function save($key, $data=null, $lifetime=null)
-    {
-        if ($this->isDisabled()) {
-            return false;
-        }
-
-
-        if (func_num_args()==1) {
-            if (is_null($this->lastCacheKey)) {
-                throw new \InvalidArgumentException("Expected at least key, and data arguments");
-            }
-
-            $data = $key;
-            $key = $this->lastCacheKey;
-        } else {
-            $key = $this->prefixize($key);
-        }
-
-        $lifetime = $this->lifetime($lifetime);
-        $this->cache->save($key, $data, $lifetime);
-        $this->lastCacheKey = null;
-
-        return $this;
-    }
-
-    protected function lifetime($lifetime=null)
-    {
-        if (is_null($lifetime)) {
-            $lifetime = $this->getDefaultLifetime();
-        }
-
-        return $lifetime;
-    }
-
-    protected function prefixize($key=null)
+    protected function prefixize($key = null)
     {
         if (is_null($key)) {
             if (is_null($this->lastCacheKey)) {
@@ -140,13 +65,17 @@ class CacheAggregator {
 
         if (is_array($key)) {
             $key = md5(serialize($key));
-        } else if (is_object($key)) {
-            if (method_exists($key, '__toString')) {
-                $key = (string)$key;
-            } else if (method_exists($key, 'toArray')) {
-                $key = serialize($key->toArray());
-            } else {
-                $key = spl_object_hash($key);
+        } else {
+            if (is_object($key)) {
+                if (method_exists($key, '__toString')) {
+                    $key = (string)$key;
+                } else {
+                    if (method_exists($key, 'toArray')) {
+                        $key = serialize($key->toArray());
+                    } else {
+                        $key = spl_object_hash($key);
+                    }
+                }
             }
         }
 
@@ -158,25 +87,13 @@ class CacheAggregator {
         return $key;
     }
 
-
-    public function setCachePrefix($prefix)
+    protected function lifetime($lifetime = null)
     {
-        $this->cachePrefix = $prefix;
-        return $this;
-    }
-
-    public function getCachePrefix()
-    {
-        return $this->cachePrefix;
-    }
-
-    public function __call($name, $args)
-    {
-        if (method_exists($this->cache, $name)) {
-            return call_user_func_array(array($this->cache, $name), $args);
+        if (is_null($lifetime)) {
+            $lifetime = $this->getDefaultLifetime();
         }
 
-        throw new \BadMethodCallException("Call to undefined method {$name}");
+        return $lifetime;
     }
 
     /**
@@ -201,5 +118,92 @@ class CacheAggregator {
         $this->defaultLifetime = (int)$defaultLifetime;
 
         return $this;
+    }
+
+    public function contains($key)
+    {
+        if ($this->isDisabled()) {
+            return false;
+        }
+        return $this->cache->contains($this->prefixize($key));
+    }
+
+    public function fetch($key = null)
+    {
+        if ($this->isDisabled()) {
+            return null;
+        }
+
+        if (is_null($key)) {
+            if (is_null($this->lastCacheKey)) {
+                throw new \InvalidArgumentException("Expected at least key, and data arguments");
+            }
+
+            $key = $this->lastCacheKey;
+        } else {
+            $key = $this->prefixize($key);
+        }
+
+        return $this->cache->fetch($key);
+    }
+
+    public function delete($key = null)
+    {
+        if (is_null($key)) {
+            if (is_null($this->lastCacheKey)) {
+                throw new \InvalidArgumentException("Expected at least key, and data arguments");
+            }
+
+            $key = $this->lastCacheKey;
+        } else {
+            $key = $this->prefixize($key);
+        }
+
+        return $this->cache->delete($this->prefixize($key));
+    }
+
+    public function save($key, $data = null, $lifetime = null)
+    {
+        if ($this->isDisabled()) {
+            return false;
+        }
+
+
+        if (func_num_args() == 1) {
+            if (is_null($this->lastCacheKey)) {
+                throw new \InvalidArgumentException("Expected at least key, and data arguments");
+            }
+
+            $data = $key;
+            $key = $this->lastCacheKey;
+        } else {
+            $key = $this->prefixize($key);
+        }
+
+        $lifetime = $this->lifetime($lifetime);
+        $this->cache->save($key, $data, $lifetime);
+        $this->lastCacheKey = null;
+
+        return $this;
+    }
+
+    public function getCachePrefix()
+    {
+        return $this->cachePrefix;
+    }
+
+    public function setCachePrefix($prefix)
+    {
+        $this->cachePrefix = $prefix;
+        return $this;
+    }
+
+    public function __call($name, $args)
+    {
+        if (method_exists($this->cache, $name)) {
+            return call_user_func_array(array($this->cache, $name), $args);
+        }
+
+        throw new \BadMethodCallException("Call to undefined method {$name}");
     }
 }

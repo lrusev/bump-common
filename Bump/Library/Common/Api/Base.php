@@ -2,23 +2,24 @@
 
 namespace Bump\Library\Common\Api;
 
-use Zeroem\CurlBundle\HttpKernel\RemoteHttpKernel,
-    Zeroem\CurlBundle\Curl\RequestGenerator,
-    Symfony\Component\HttpFoundation\Request,
-    Symfony\Component\HttpFoundation\Response as HttpResponse,
-    Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException,
-    Doctrine\Common\Inflector\Inflector,
-    Zeroem\CurlBundle\Curl\MultiManager,
-    Zeroem\CurlBundle\Curl\CurlEvents,
-    Zeroem\CurlBundle\Curl\MultiInfoEvent,
-    Symfony\Component\EventDispatcher\EventDispatcher,
-    Bump\Library\Common\CacheAggregator,
-    Doctrine\Common\Cache\ArrayCache,
-    Bump\Library\Common\Utils,
-    Bump\Library\Common\Curl;
+use Bump\Library\Common\CacheAggregator;
+use Bump\Library\Common\Curl;
+use Bump\Library\Common\Utils;
+use Doctrine\Common\Cache\ArrayCache;
+use Doctrine\Common\Inflector\Inflector;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
+use Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException;
+use Zeroem\CurlBundle\Curl\CurlEvents;
+use Zeroem\CurlBundle\Curl\MultiInfoEvent;
+use Zeroem\CurlBundle\Curl\MultiManager;
+use Zeroem\CurlBundle\Curl\RequestGenerator;
+use Zeroem\CurlBundle\HttpKernel\RemoteHttpKernel;
 
 
-abstract class Base {
+abstract class Base
+{
     protected $remoteKernel;
     protected $timeout = 60;
     protected $baseUrl;
@@ -26,13 +27,13 @@ abstract class Base {
     protected $defaultParams;
     protected $defaultContentType = "application/json";
     protected $defaultCurlOptions = array(
-        CURLOPT_RETURNTRANSFER=>true,
-        CURLOPT_CONNECTTIMEOUT=>4,
-        CURLOPT_NOSIGNAL=>true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 4,
+        CURLOPT_NOSIGNAL => true,
     );
     protected $cache;
 
-    public function __construct($baseUrl=null, array $actions=array(), array $defaultParams=array())
+    public function __construct($baseUrl = null, array $actions = array(), array $defaultParams = array())
     {
         if (!is_null($baseUrl)) {
             $this->setBaseUrl($baseUrl);
@@ -77,12 +78,12 @@ abstract class Base {
         $baseUrl = rtrim($baseUrl, '/');
         $this->actionsMap = array();
 
-        foreach($actions as $name=>$action) {
+        foreach ($actions as $name => $action) {
             $url = $baseUrl . '/' . ltrim($action, '/');
             $parts = parse_url($url);
             if (is_numeric($name)) {
                 $name = basename($parts['path']);
-                if (false!==($pos = strpos($name, '.'))) {
+                if (false !== ($pos = strpos($name, '.'))) {
                     $name = substr($name, 0, $pos);
                 }
             }
@@ -111,11 +112,11 @@ abstract class Base {
         return $this->baseUrl;
     }
 
-    protected function handleResponse(HttpResponse $response, $contentType=null)
+    protected function handleResponse(HttpResponse $response, $contentType = null)
     {
         if (is_null($contentType)) {
             $contentType = $response->headers->get('Content-type');
-            if (false!==strpos($contentType, ';')) {
+            if (false !== strpos($contentType, ';')) {
                 $parts = explode(';', $contentType);
                 $contentType = $parts[0];
             }
@@ -127,7 +128,7 @@ abstract class Base {
         return $this->handleResponseContent($content, $contentType, $statusCode);
     }
 
-    protected function handleResponseContent($content, $contentType, $statusCode=200)
+    protected function handleResponseContent($content, $contentType, $statusCode = 200)
     {
         $data = null;
         if (!empty($content)) {
@@ -141,18 +142,20 @@ abstract class Base {
                 default:
                     $data = $content;
             }
-        } else if ($statusCode===201 || $statusCode===204) {
-            return true;
+        } else {
+            if ($statusCode === 201 || $statusCode === 204) {
+                return true;
+            }
         }
 
         return $data;
     }
 
-    protected function parseJSON($content, $detectEncoding=array('utf-8', 'iso-8859-1', 'windows-1251'))
+    protected function parseJSON($content, $detectEncoding = array('utf-8', 'iso-8859-1', 'windows-1251'))
     {
         if (!empty($detectEncoding)) {
             $encoding = mb_detect_encoding($content, $detectEncoding);
-            if ($encoding!=='UTF-8') {
+            if ($encoding !== 'UTF-8') {
                 $content = iconv($encoding, 'UTF-8', $content);
             }
         }
@@ -162,8 +165,9 @@ abstract class Base {
 
     protected function parseXML($content)
     {
-        return json_decode(json_encode((array) simplexml_load_string($content)),1);
+        return json_decode(json_encode((array)simplexml_load_string($content)), 1);
     }
+
     /**
      * Gets the value of remoteKernel.
      *
@@ -181,7 +185,7 @@ abstract class Base {
     protected function collectCurlOptions()
     {
         $options = $this->defaultCurlOptions + $this->getCurlOptions();
-        $options[CURLOPT_TIMEOUT]=$this->getTimeout();
+        $options[CURLOPT_TIMEOUT] = $this->getTimeout();
 
         return $options;
     }
@@ -205,7 +209,7 @@ abstract class Base {
 
     public function getActionUrl($action, $throwError)
     {
-        return $this->isValidAction($action, $throwError)?$this->actionsMap[$action]:null;
+        return $this->isValidAction($action, $throwError) ? $this->actionsMap[$action] : null;
     }
 
     public function getUrlAction($url)
@@ -213,7 +217,7 @@ abstract class Base {
         return array_search($url, $this->getActions());
     }
 
-    public function isValidAction($action, $throwError=false)
+    public function isValidAction($action, $throwError = false)
     {
         $actions = $this->getActions();
         if (!isset($actions[$action])) {
@@ -256,14 +260,14 @@ abstract class Base {
         throw new \RuntimeException("Try to call undefined method {$name}");
     }
 
-    public function doAction($action, $method='GET', array $params=array(), array $headers=array())
+    public function doAction($action, $method = 'GET', array $params = array(), array $headers = array())
     {
         $actions = $this->getActions();
         if (!isset($actions[$action])) {
             throw new \InvalidArgumentException("Invalid action: {$action}");
         }
 
-        if ($method=='GET' && $this->cache->contains($actions[$action])) {
+        if ($method == 'GET' && $this->cache->contains($actions[$action])) {
             return $this->cache->fetch();
         }
 
@@ -273,7 +277,7 @@ abstract class Base {
         return $data;
     }
 
-    public function doBatchAction(array $actions=array(), $method="GET", array $params=array())
+    public function doBatchAction(array $actions = array(), $method = "GET", array $params = array())
     {
         $map = $this->getActions();
         if (empty($actions)) {
@@ -282,7 +286,7 @@ abstract class Base {
 
         $collection = new Curl\Collection;
 
-        foreach($actions as $key=>$val) {
+        foreach ($actions as $key => $val) {
             $a = $val;
             $p = $params;
             if (is_array($val)) {
@@ -303,18 +307,18 @@ abstract class Base {
         return $this->doMultiRequest($collection);
     }
 
-    public function doMultiRequest(Curl\Collection $collection, $contentType=null)
+    public function doMultiRequest(Curl\Collection $collection, $contentType = null)
     {
         $self = $this;
         $result = new ResponseCollection();
         $dispatcher = new EventDispatcher();
         $dispatcher->addListener(
             CurlEvents::MULTI_INFO,
-            function(MultiInfoEvent $e) use($self, &$result, $contentType)   {
+            function (MultiInfoEvent $e) use ($self, &$result, $contentType) {
                 $request = $e->getRequest();
                 $response = $e->getManager()->getResponse($request);
 
-                if ($request->getMethod()=='GET') {
+                if ($request->getMethod() == 'GET') {
                     $data = $this->makeApiResponse($response, $contentType);
                 } else {
                     if ($response->isRedirection()) {
@@ -329,14 +333,14 @@ abstract class Base {
                 }*/
 
                 $result[$request->getId()] = $data;
-                if (!empty($data) && $request->getMethod()=='GET' && $self->isSuccessful($response)) {
+                if (!empty($data) && $request->getMethod() == 'GET' && $self->isSuccessful($response)) {
                     $self->getCache()->save(md5($request->getUrl()), $data);
                 }
-        });
+            });
 
-         $mm = new Curl\MultiManager($dispatcher);
-         foreach($collection as $request) {
-            if ($request->getMethod()=='GET' && $this->cache->contains(md5($request->getUrl()))) {
+        $mm = new Curl\MultiManager($dispatcher);
+        foreach ($collection as $request) {
+            if ($request->getMethod() == 'GET' && $this->cache->contains(md5($request->getUrl()))) {
                 $result[$request->getId()] = $this->cache->fetch();
                 continue;
             } else {
@@ -344,13 +348,13 @@ abstract class Base {
             }
 
             $mm->addRequest($request);
-         }
+        }
 
-         if (!$mm->isEmpty()) {
-             $mm->execute();
-         }
+        if (!$mm->isEmpty()) {
+            $mm->execute();
+        }
 
-         return $result;
+        return $result;
     }
 
     protected function isSuccessful(HttpResponse $response)
@@ -358,34 +362,34 @@ abstract class Base {
         return $response->isSuccessful();
     }
 
-    public function get($url, $params=null, array $headers=array(), $contentType=null)
+    public function get($url, $params = null, array $headers = array(), $contentType = null)
     {
         return $this->request($url, "GET", $params, $headers, $contentType);
     }
 
-    public function post($url, $params=null, array $headers=array(), $contentType=null)
+    public function post($url, $params = null, array $headers = array(), $contentType = null)
     {
         return $this->request($url, "POST", $params, $headers, $contentType);
     }
 
-    public function put($url, $params=null, array $headers=array(), $contentType=null)
+    public function put($url, $params = null, array $headers = array(), $contentType = null)
     {
         return $this->request($url, "PUT", $params, $headers, $contentType);
     }
 
-    public function delete($url, $params=null, array $headers=array(), $contentType=null)
+    public function delete($url, $params = null, array $headers = array(), $contentType = null)
     {
         return $this->request($url, "DELETE", $params, $headers, $contentType);
     }
 
-    public function patch($url, $params=null, array $headers=array(), $contentType=null)
+    public function patch($url, $params = null, array $headers = array(), $contentType = null)
     {
         return $this->request($url, "PATCH", $params, $headers, $contentType);
     }
 
-    protected function request($url, $method="GET", $params=null, array $headers=array(), $contentType=null)
+    protected function request($url, $method = "GET", $params = null, array $headers = array(), $contentType = null)
     {
-        if (func_num_args()===3) {
+        if (func_num_args() === 3) {
             if (!is_array($params)) {
                 $contentType = $params;
                 $params = array();
@@ -400,17 +404,21 @@ abstract class Base {
     }
 
 
-    public function doSingleRequest(Request $request, $contentType=null)
+    public function doSingleRequest(Request $request, $contentType = null)
     {
         $method = $request->getMethod();
-        if ($method == 'GET' && $this->cache->contains(md5(serialize(array($request->getUri(), $request->request->all()))))) {
+        if ($method == 'GET' && $this->cache->contains(md5(serialize(array(
+                $request->getUri(),
+                $request->request->all()
+            ))))
+        ) {
             return $this->cache->fetch();
         }
 
         $response = $this->getRemoteKernel()->handle($request);
 
         if ($response->isSuccessful()) {
-            if ($method=='GET') {
+            if ($method == 'GET') {
                 $data = $this->makeApiResponse($response, $contentType);
             } else {
                 $data = $this->handleResponse($response, $this->getDefaultContentType());
@@ -431,26 +439,31 @@ abstract class Base {
         }
     }
 
-    protected function makeApiResponse(HttpResponse $response, $contentType=null)
+    protected function makeApiResponse(HttpResponse $response, $contentType = null)
     {
         if (is_null($contentType)) {
             $contentType = $this->getDefaultContentType();
         }
 
-        switch($contentType) {
+        switch ($contentType) {
             case 'application/json':
                 return new JSONResponse($response);
-            break;
+                break;
             case 'application/xml':
                 return new XMLResponse($response);
-            break;
+                break;
             default:
                 return new RawResponse($response);
         }
     }
 
-    public function buildRequest($url, $method='GET', array $params=array(), array $headers=array(), $doFilter=true)
-    {
+    public function buildRequest(
+        $url,
+        $method = 'GET',
+        array $params = array(),
+        array $headers = array(),
+        $doFilter = true
+    ) {
         if ($doFilter) {
             $params = $this->filterParams($params);
         }
@@ -462,7 +475,7 @@ abstract class Base {
         return $request;
     }
 
-    protected function filterParams(array $params=array())
+    protected function filterParams(array $params = array())
     {
         return array_merge($this->getDefaultParams(), $params);
     }
@@ -484,7 +497,7 @@ abstract class Base {
         return $this;
     }
 
-    public function setDefaultParams(array $default=array())
+    public function setDefaultParams(array $default = array())
     {
         $this->defaultParams = $default;
 

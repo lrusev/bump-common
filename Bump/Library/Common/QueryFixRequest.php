@@ -7,21 +7,28 @@ use Symfony\Component\HttpFoundation\Request;
 class QueryFixRequest extends Request
 {
 
-    public static function create($uri, $method = 'GET', $parameters = array(), $cookies = array(), $files = array(), $server = array(), $content = null)
-    {
+    public static function create(
+        $uri,
+        $method = 'GET',
+        $parameters = array(),
+        $cookies = array(),
+        $files = array(),
+        $server = array(),
+        $content = null
+    ) {
         $server = array_replace(array(
-            'SERVER_NAME'          => 'localhost',
-            'SERVER_PORT'          => 80,
-            'HTTP_HOST'            => 'localhost',
-            'HTTP_USER_AGENT'      => 'Symfony/2.X',
-            'HTTP_ACCEPT'          => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'SERVER_NAME' => 'localhost',
+            'SERVER_PORT' => 80,
+            'HTTP_HOST' => 'localhost',
+            'HTTP_USER_AGENT' => 'Symfony/2.X',
+            'HTTP_ACCEPT' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'HTTP_ACCEPT_LANGUAGE' => 'en-us,en;q=0.5',
-            'HTTP_ACCEPT_CHARSET'  => 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
-            'REMOTE_ADDR'          => '127.0.0.1',
-            'SCRIPT_NAME'          => '',
-            'SCRIPT_FILENAME'      => '',
-            'SERVER_PROTOCOL'      => 'HTTP/1.1',
-            'REQUEST_TIME'         => time(),
+            'HTTP_ACCEPT_CHARSET' => 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+            'REMOTE_ADDR' => '127.0.0.1',
+            'SCRIPT_NAME' => '',
+            'SCRIPT_FILENAME' => '',
+            'SERVER_PROTOCOL' => 'HTTP/1.1',
+            'REQUEST_TIME' => time(),
         ), $server);
 
         $server['PATH_INFO'] = '';
@@ -45,7 +52,7 @@ class QueryFixRequest extends Request
 
         if (isset($components['port'])) {
             $server['SERVER_PORT'] = $components['port'];
-            $server['HTTP_HOST'] = $server['HTTP_HOST'].':'.$components['port'];
+            $server['HTTP_HOST'] = $server['HTTP_HOST'] . ':' . $components['port'];
         }
 
         if (isset($components['user'])) {
@@ -89,7 +96,7 @@ class QueryFixRequest extends Request
             $queryString = http_build_query($query, '', '&');
         }
 
-        $server['REQUEST_URI'] = $components['path'].('' !== $queryString ? '?'.$queryString : '');
+        $server['REQUEST_URI'] = $components['path'] . ('' !== $queryString ? '?' . $queryString : '');
         $server['QUERY_STRING'] = $queryString;
 
         return new static($query, $request, array(), $cookies, $files, $server, $content);
@@ -106,10 +113,10 @@ class QueryFixRequest extends Request
     {
         if (($qs = $this->server->get('QUERY_STRING'))) {
             if (!empty($qs)) {
-                $qs = '?'.urldecode($qs);
+                $qs = '?' . urldecode($qs);
             }
         }
 
-        return $this->getSchemeAndHttpHost().$this->getBaseUrl().$this->getPathInfo().$qs;
+        return $this->getSchemeAndHttpHost() . $this->getBaseUrl() . $this->getPathInfo() . $qs;
     }
 }
